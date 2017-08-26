@@ -4,7 +4,7 @@ from itertools import chain
 from itertools import combinations
 
 #Just used so we don't have to write out the trivial splits
-def trivial_splits(vertices):
+def get_trivia_splits(vertices):
     triv_splits=[]
     x = set(vertices)
     for vertice in x:
@@ -32,47 +32,38 @@ def newleaves(num, splits, pow_set, new_leaves_set, new_splits):
                 new_splits.append(z)
 
 #returns a list of all new splits in list of set format
-def newsplits(vertices, tree, new_leaves):
-    triv_splits = trivial_splits(vertices)
+def get_new_splits(vertices, tree, new_leaves):
+    trivia_splits = get_trivia_splits(vertices)
     empty = [[set(), set(vertices)]]
-    new_leaves_set=set(new_leaves)
-    pow_set = list(powerset(new_leaves_set))
+    new_leaf_set = set(new_leaves)
+    pow_set = list(powerset(new_leaf_set))
     new_splits=[]
-    newleaves(0, tree, pow_set, new_leaves_set, new_splits)
-    newleaves(1, triv_splits, pow_set, new_leaves_set, new_splits)
-    newleaves(2, empty, pow_set, new_leaves_set, new_splits)
+    newleaves(0, tree, pow_set, new_leaf_set , new_splits)
+    newleaves(1, trivia_splits, pow_set, new_leaf_set , new_splits)
+    newleaves(2, empty, pow_set, new_leaf_set , new_splits)
     return new_splits
 
 #function to convert splits from list of sets format to strings
-def to_string(split,leaves):
-    node = str()
-    for leaf in leaves:
-        if leaf in split[0]:
-            node = node+leaf
-    node = node+'|'
-    for leaf in leaves:
-        if leaf in split[1]:
-            node = node+leaf
-    return(node)
+def get_split_name(split):
+    return ','.join(split[0])+'|'+','.join(split[1])
 
-#returns a dictionary where keys are splits and values are splits compatible to the key
-#There's a problem when one of the leaf names is more than one character, for example '10' so I suggest using letters
-def graphdict(new_splits, vertices, new_leaves):
-    graph_dict = dict()
-    leaves = vertices+new_leaves
-    for key in new_splits:
-        compatible = []
-        for value in new_splits:
-            if key != value:
-                if key[0]&value[0]==set() or key[1]&value[0]==set() or key[0]&value[1]==set() or key[1]&value[1]==set():
-                    compatible.append(value)
-        k = to_string(key,leaves)
-        v = []
-        for value in compatible:
-            node = to_string(value,leaves)
-            v.append(node)
-        graph_dict[k] = v
-    return graph_dict
+def is_compatible_splits(first, second):
+    if first[0]&second[0]==set() or first[1]&second[0]==set() or first[0]&second[1]==set() or first[1]&second[1]==set():
+        return True
+    return False
+
+def get_connection_graph_adjacency_list(new_splits, start_tree_vertex_set, new_leaves):
+    connection_graph_adjacency_list = dict()
+    for split_index in range(len(new_splits)-1):
+        current_split = new_splits[split_index]
+        current_split_name = get_split_name(current_split)
+        other_splits = new_splits[split_index+1:]
+        compatible_splits = []
+        for other_split in other_splits:
+            if is_compatible_splits(current_split, other_split):
+                compatible_splits.append(get_split_name(other_split))
+        connection_graph_adjacency_list[current_split_name] = compatible_splits
+    return connection_graph_adjacency_list
 
 #returns a networkx Graph of our compatible splits
 def graph(graph_dict):
@@ -99,21 +90,24 @@ def max_indep_set(G):
         n.append(k)
     return max(n)
 
+
 if __name__ == '__main__':
+    # TODO: implement newick tree format parser
     #vertices is a list of leaves from the start tree
-    vertices = ['1','2','3','4','5']
-
-    #tree takes split inputs for the shape of the start tree
-    #It is a list of lists where the elements are a list of 2 elements where the 1st entry is the left side of a split
-    #and the 2nd entry is the right side of the split
-    #Ex: the split AB|CDE should be a [set(['A','B']), set(['C','D','E'])]
-    tree =[[set(['1','2']), set(['3','4','5'])],[set(['1','2','3']), set(['4','5'])]]
-
-    #new_leaves is a list that takes in name of the leaves we want to add as its elements
-    new_leaves = ['6']
-    new_splits = newsplits(vertices, tree, new_leaves)
-    graph_dict = graphdict(new_splits, vertices, new_leaves)
-    print(graph_dict)
-    G = graph(graph_dict)
+    start_tree_vertex_set = ['1','2','3','4','5','6','7','8','9']
+    # start tree in newick format: (((((1, 2), 3), 4),  ((6, 7), 5)), ((9, 10), 8))
+    start_tree =[
+    [set(['1','2']), set(['3','4','5','6','7','8','9'])],
+    [set(['1','2','3']), set(['4','5','6','7','8','9'])], 
+    [set(['1','2','3','4']), set(['5','6','7','8','9'])],
+    [set(['6','7']), set(['1','2','3','4','5','8','9'])],
+    [set(['5','6','7']), set(['1','2','3','4','8','9'])],
+    [set(['8','9']), set(['1','2','3','4','5','6','7'])],
+    ]
+    new_leaves = ['10', '11']
+    new_splits = get_new_splits(start_tree_vertex_set, start_tree, new_leaves)
+    connection_graph_adjacency_list = get_connection_graph_adjacency_list(new_splits, start_tree_vertex_set, new_leaves)
+    G = graph(connection_graph_adjacency_list)
     nx.draw_networkx(G)
+    print(G.number_of_nodes(), G.number_of_edges())
     plt.show()
