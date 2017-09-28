@@ -6,10 +6,10 @@ from itertools import combinations
 #Just used so we don't have to write out the trivial splits
 def get_trivia_splits(vertices):
     triv_splits=[]
-    x = set(vertices)
+    x = vertices
     for vertice in x:
         left = set(vertice)
-        right = x.difference(vertice)
+        right = set(vertices).difference(vertice)
         triv_splits.append([left, right])
     return triv_splits
 
@@ -38,21 +38,30 @@ def get_new_splits(vertices, tree, new_leaves):
     new_leaf_set = set(new_leaves)
     pow_set = list(powerset(new_leaf_set))
     new_splits=[]
-    newleaves(0, tree, pow_set, new_leaf_set , new_splits)
-    newleaves(1, trivia_splits, pow_set, new_leaf_set , new_splits)
     newleaves(2, empty, pow_set, new_leaf_set , new_splits)
+    newleaves(1, trivia_splits, pow_set, new_leaf_set , new_splits)
+    newleaves(0, tree, pow_set, new_leaf_set , new_splits)
     return new_splits
 
 #function to convert splits from list of sets format to strings
 def get_split_name(split):
-    return ','.join(split[0])+'|'+','.join(split[1])
+    split[0] = [int(x) for x in split[0]]
+    split[0].sort()
+    split[0] = [str(x) for x in split[0]]
+    split[1] = [int(x) for x in split[1]]
+    split[1].sort()
+    split[1] = [str(x) for x in split[1]]
+    split_name = ','.join(split[0])+'|'+','.join(split[1])
+    split[0] = set(split[0])
+    split[1] = set(split[1])
+    return split_name
 
 def is_compatible_splits(first, second):
     if first[0]&second[0]==set() or first[1]&second[0]==set() or first[0]&second[1]==set() or first[1]&second[1]==set():
         return True
     return False
 
-def get_connection_graph_adjacency_list(new_splits, start_tree_vertex_set, new_leaves):
+def get_connection_graph_adjacency_list(new_splits, start_tree_vertex_set, new_leaves, split_names):
     connection_graph_adjacency_list = dict()
     for split_index in range(len(new_splits)-1):
         current_split = new_splits[split_index]
@@ -63,6 +72,10 @@ def get_connection_graph_adjacency_list(new_splits, start_tree_vertex_set, new_l
             if is_compatible_splits(current_split, other_split):
                 compatible_splits.append(get_split_name(other_split))
         connection_graph_adjacency_list[current_split_name] = compatible_splits
+        split_names.append(current_split_name)
+    current_split_name = get_split_name(new_splits[-1])
+    connection_graph_adjacency_list[current_split_name] = []
+    split_names.append(current_split_name)
     return connection_graph_adjacency_list
 
 #returns a networkx Graph of our compatible splits
@@ -85,8 +98,6 @@ def max_indep_set(G):
     for i in range(10000):
         g = nx.maximal_independent_set(G)
         k = len(g)
-#        if k >= 23:
-#            print g
         n.append(k)
     return max(n)
 
@@ -104,10 +115,16 @@ if __name__ == '__main__':
     [set(['5','6','7']), set(['1','2','3','4','8','9'])],
     [set(['8','9']), set(['1','2','3','4','5','6','7'])],
     ]
-    new_leaves = ['10', '11']
+    new_leaves = ['10']
     new_splits = get_new_splits(start_tree_vertex_set, start_tree, new_leaves)
-    connection_graph_adjacency_list = get_connection_graph_adjacency_list(new_splits, start_tree_vertex_set, new_leaves)
+    split_names = []
+    connection_graph_adjacency_list = get_connection_graph_adjacency_list(new_splits, start_tree_vertex_set, new_leaves, split_names)
     G = graph(connection_graph_adjacency_list)
-    nx.draw_networkx(G)
+    H = nx.Graph()
+    H.add_nodes_from(connection_graph_adjacency_list.keys())
+    H.add_edges_from(G.edges())
+    graph_pos = nx.shell_layout(H , [split_names])
+    nx.draw_networkx(H, graph_pos, node_size = 100, font_size = 10)
     print(G.number_of_nodes(), G.number_of_edges())
+    plt.savefig("./graph.pdf")
     plt.show()
