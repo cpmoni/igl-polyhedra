@@ -19,7 +19,7 @@ pytz version 2017.2
 six version 1.10.0
 subprocess32 version 3.2.7
 
-To automatically install the package dependencies listed above use the file requirements.txt in the following way: 
+To automatically install the package dependencies listed above use the file requirements.txt in the following way: pip install requirements.txt
 
 Usage instructions: <input> <command> produces blah. 
 

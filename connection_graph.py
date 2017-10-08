@@ -2,6 +2,9 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from itertools import chain
 from itertools import combinations
+import sys
+from dendropy.datamodel import treemodel
+import dendropy
 
 #Just used so we don't have to write out the trivial splits
 def get_trivia_splits(vertices):
@@ -103,18 +106,35 @@ def max_indep_set(G):
 
 
 if __name__ == '__main__':
-    # TODO: implement newick tree format parser
-    #vertices is a list of leaves from the start tree
-    start_tree_vertex_set = ['1','2','3','4','5','6','7','8','9']
-    # start tree in newick format: (((((1, 2), 3), 4),  ((6, 7), 5)), ((9, 10), 8))
-    start_tree =[
-    [set(['1','2']), set(['3','4','5','6','7','8','9'])],
-    [set(['1','2','3']), set(['4','5','6','7','8','9'])], 
-    [set(['1','2','3','4']), set(['5','6','7','8','9'])],
-    [set(['6','7']), set(['1','2','3','4','5','8','9'])],
-    [set(['5','6','7']), set(['1','2','3','4','8','9'])],
-    [set(['8','9']), set(['1','2','3','4','5','6','7'])],
-    ]
+    input_filename = './start_tree.tre'
+    output_filename = './graph.pdf'
+    if len(sys.argv) > 2:
+        input_filename = sys.argv[1]
+        output_filename = sys.argv[2]
+    else:
+        print 'Using default input and output files. Please use python connection_graph.py <input_filename> <output_filename> to specify customize file names'
+
+    start_tree = []
+    start_tree_vertex_set = []
+    with open (input_filename, 'r') as f:
+        start_tree_newick = f.readlines()[0]
+        start_tree_dendro = dendropy.Tree.get(
+                data=start_tree_newick,
+                schema="newick")
+        for split in start_tree_dendro.encode_bipartitions():
+            split_string = split.split_as_newick_string(start_tree_dendro.taxon_namespace)
+            split_string = split_string.split('), (')
+            if len(split_string)>1:
+                first, second = split_string[0], split_string[1]
+                first = first[2:]
+                second = second[:-3]
+                if len(first) > 1 and len(second)>1:
+                    first = [x.strip() for x in first.split(',')]
+                    second = [x.strip() for x in second.split(',')]
+                    start_tree.append([set([str(x) for x in first]), set([str(x) for x in second])])
+            else:
+                start_tree_vertex_set = split_string[0][1:-2].split(',')
+
     new_leaves = ['10']
     new_splits = get_new_splits(start_tree_vertex_set, start_tree, new_leaves)
     split_names = []
@@ -126,5 +146,5 @@ if __name__ == '__main__':
     graph_pos = nx.shell_layout(H , [split_names])
     nx.draw_networkx(H, graph_pos, node_size = 100, font_size = 10)
     print(G.number_of_nodes(), G.number_of_edges())
-    plt.savefig("./graph.pdf")
+    plt.savefig(output_filename)
     plt.show()
