@@ -6,6 +6,9 @@ import sys
 from dendropy.datamodel import treemodel
 import dendropy
 
+import warnings
+warnings.filterwarnings("ignore")
+
 #Just used so we don't have to write out the trivial splits
 def get_trivia_splits(vertices):
     triv_splits=[]
@@ -89,13 +92,6 @@ def graph(graph_dict):
             G.add_edge(key,value)
     return G
     
-
-#Not a great way for finding independent sets of maximum size
-
-#nx.maximal_independent_set(G) returns a random maximal independent set (maximal not maximum) of grap G,
-#so I just run it a bunch of times and get the one of largest size
-
-# If we know max size then we can print some out using the if and print command that is commented out
 def max_indep_set(G):
     n = []
     for i in range(10000):
@@ -104,20 +100,13 @@ def max_indep_set(G):
         n.append(k)
     return max(n)
 
-
-if __name__ == '__main__':
-    input_filename = './start_tree.tre'
-    output_filename = './graph.pdf'
-    if len(sys.argv) > 2:
-        input_filename = sys.argv[1]
-        output_filename = sys.argv[2]
-    else:
-        print 'Using default input and output files. Please use python connection_graph.py <input_filename> <output_filename> to specify customize file names'
-
+def get_start_tree_and_new_leaves(input_filename):
     start_tree = []
     start_tree_vertex_set = []
+    new_leaves = []
     with open (input_filename, 'r') as f:
-        start_tree_newick = f.readlines()[0]
+        [start_tree_newick, new_leaves_string] = f.readlines()
+        new_leaves = new_leaves_string[1:-1].split(',')
         start_tree_dendro = dendropy.Tree.get(
                 data=start_tree_newick,
                 schema="newick")
@@ -134,8 +123,20 @@ if __name__ == '__main__':
                     start_tree.append([set([str(x) for x in first]), set([str(x) for x in second])])
             else:
                 start_tree_vertex_set = split_string[0][1:-2].split(',')
+    return start_tree, start_tree_vertex_set, new_leaves
 
-    new_leaves = ['10']
+
+if __name__ == '__main__':
+    input_filename = './start_tree.tre'
+    output_filename = './graph.pdf'
+    if len(sys.argv) > 2:
+        input_filename = sys.argv[1]
+        output_filename = sys.argv[2]
+    else:
+        print 'Using default input and output files. Please use python connection_graph.py <input_filename> <output_filename> to specify customize file names'
+    print ('    | Reading start tree and new leaves from {}...'.format(input_filename))
+    start_tree, start_tree_vertex_set, new_leaves = get_start_tree_and_new_leaves(input_filename)
+    print ('    | Calculating connection graph...')
     new_splits = get_new_splits(start_tree_vertex_set, start_tree, new_leaves)
     split_names = []
     connection_graph_adjacency_list = get_connection_graph_adjacency_list(new_splits, start_tree_vertex_set, new_leaves, split_names)
@@ -145,6 +146,7 @@ if __name__ == '__main__':
     H.add_edges_from(G.edges())
     graph_pos = nx.shell_layout(H , [split_names])
     nx.draw_networkx(H, graph_pos, node_size = 100, font_size = 10)
-    print(G.number_of_nodes(), G.number_of_edges())
+    print('    | The connection graph has {} number of nodes and {} number of edges'.format(G.number_of_nodes(), G.number_of_edges()))
     plt.savefig(output_filename)
+    print('    | Save output image to {}'.format(output_filename))
     plt.show()
