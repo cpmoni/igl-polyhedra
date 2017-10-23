@@ -1,31 +1,40 @@
-# igl-polyhedra
+# BHV Connection Graph
 
-Installation instructions:  
+## Installation instructions:  
 
-Git must be installed on your computer. Either download the zip file from githubor use the command git clone https://github.com/cpmoni/igl-polyhedra.git  
+First install git, then clone our repository with 
+```bash 
+git clone https://github.com/cpmoni/igl-polyhedra.git
+``` 
 
 This package requires some dependencies: 
-Dendropy version 4.3.0 available at http://dendropy.org/,
-cycler version 0.10.0
-decorator version 4.1.2
-DendroPy version 4.3.0
-functools32 version 3.2.3.post2
-matplotlib version 2.0.2
-networkx version 1.11
-numpy version 1.13.1
-pyparsing version 2.2.0
-python-dateutil version 2.6.1
-pytz version 2017.2
-six version 1.10.0
-subprocess32 version 3.2.7
+* cycler version 0.10.0
+* decorator version 4.1.2
+* DendroPy version 4.3.0
+* functools32 version 3.2.3.post2
+* matplotlib version 2.0.2
+* networkx version 1.11
+* numpy version 1.13.1
+* pyparsing version 2.2.0
+* python-dateutil version 2.6.1
+* pytz version 2017.2
+* six version 1.10.0
+* subprocess32 version 3.2.7`
 
-To automatically install the package dependencies listed above use the file requirements.txt in the following way: pip install requirements.txt
+To automatically install the package dependencies listed above, install pip and run: 
+```bash
+pip install requirements.txt
+```
 
-Usage instructions: <input> <command> produces blah. 
+## Usage instructions: 
 
-To create the connection graph with a tree in newick format: <input> <connection_graph.py>, explain that an example output looks like graph.pdf 
+```bash
+python connection_graph.py <input_filename> <output_filename>
+```
+The input file should contain the start tree in Newick format in the first line, and the list of new leaves in the second line in parenthesis: `(10, 11, 12)`. Please use numbers as the labels of the leaves in the start tree and the new leaves. The default input file is "start_tree.tre".
 
-To use Dendropy to create a consensus tree: 
+The program will display the connection graph and save it to `<output_filename>`. It also prints out the number of nodes and edges in the graph.
 
-(note-change name of BHV blah blah py): To use new name file :
+## Contact
 
+If you have any questions feel free to contact us at redavid2@illinois.edu.
