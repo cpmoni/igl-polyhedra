@@ -19,7 +19,7 @@ This package requires some dependencies:
 * python-dateutil version 2.6.1
 * pytz version 2017.2
 * six version 1.10.0
-* subprocess32 version 3.2.7`
+* subprocess32 version 3.2.7
 
 To automatically install the package dependencies listed above, install pip and run: 
 ```bash
@@ -31,7 +31,7 @@ pip install requirements.txt
 ```bash
 python connection_graph.py <input_filename> <output_filename>
 ```
-The input file should contain the start tree in Newick format in the first line, and the list of new leaves in the second line in parenthesis: `(10, 11, 12)`. Please use numbers as the labels of the leaves in the start tree and the new leaves. The default input file is "start_tree.tre".
+The input file should contain the start tree in Newick format in the first line, and the list of new leaves in the second line in parenthesis, for example: `(10, 11, 12)`. Please use numbers as the labels of the leaves in the start tree and the new leaves. The default input file is "start_tree.tre".
 
 The program will display the connection graph and save it to `<output_filename>`. It also prints out the number of nodes and edges in the graph.
 
