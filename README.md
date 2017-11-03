@@ -31,6 +31,10 @@ pip install requirements.txt
 ```bash
 python connection_graph.py <input_filename> <output_filename>
 ```
+This script generates the BHV connection graph for moving between multiple copies of BHV space-those with maximal dimensional orthants of which the dimension is determined by the number of leaves of an unrooted tree, and  described in the manuscript available at https://arxiv.org/abs/1708.02626
+
+To move from one copy of BHV space to another we have adopted the convention of starting in a lower dimension and moving to higher dimensions. Therefore a start tree is necessary to use our code. 
+
 The input file should contain the start tree in Newick format in the first line, and the list of new leaves in the second line in parenthesis, for example: `(10, 11, 12)`. Please use numbers as the labels of the leaves in the start tree and the new leaves. The default input file is "start_tree.tre".
 
 The program will display the connection graph and save it to `<output_filename>`. It also prints out the number of nodes and edges in the graph.
